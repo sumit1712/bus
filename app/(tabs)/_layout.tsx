@@ -1,20 +1,12 @@
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTheme } from 'react-native-paper';
 
 export default function TabLayout() {
-  const theme = useTheme();
-
   return (
     <Tabs
       screenOptions={{
+        tabBarActiveTintColor: '#007AFF',
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.outline,
-        },
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
       }}>
       <Tabs.Screen
         name="index"
@@ -30,16 +22,7 @@ export default function TabLayout() {
         options={{
           title: 'Offers',
           tabBarIcon: ({ size, color }) => (
-            <MaterialCommunityIcons name="tag-multiple" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="bookings"
-        options={{
-          title: 'Bookings',
-          tabBarIcon: ({ size, color }) => (
-            <MaterialCommunityIcons name="ticket" size={size} color={color} />
+            <MaterialCommunityIcons name="tag" size={size} color={color} />
           ),
         }}
       />

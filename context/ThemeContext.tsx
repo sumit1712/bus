@@ -5,16 +5,18 @@ const lightTheme: MD3Theme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: '#FF5722',
-    primaryContainer: '#FFCCBC',
-    secondary: '#4CAF50',
-    secondaryContainer: '#C8E6C9',
-    tertiary: '#2196F3',
-    tertiaryContainer: '#BBDEFB',
+    primary: '#E91E63', // Modern Pink-Red
+    primaryContainer: '#FCE4EC',
+    secondary: '#00BCD4', // Cyan
+    secondaryContainer: '#E0F2F1',
+    tertiary: '#FF9800', // Orange
+    tertiaryContainer: '#FFF3E0',
     error: '#F44336',
-    background: '#F5F5F5',
+    background: '#FAFAFA',
     surface: '#FFFFFF',
-    onSurfaceVariant: '#757575',
+    surfaceVariant: '#F5F5F5',
+    onSurfaceVariant: '#616161',
+    outline: '#E0E0E0',
   },
 };
 
@@ -22,16 +24,18 @@ const darkTheme: MD3Theme = {
   ...MD3DarkTheme,
   colors: {
     ...MD3DarkTheme.colors,
-    primary: '#FF8A65',
-    primaryContainer: '#BF360C',
-    secondary: '#81C784',
-    secondaryContainer: '#2E7D32',
-    tertiary: '#64B5F6',
-    tertiaryContainer: '#1565C0',
-    error: '#E57373',
+    primary: '#F48FB1', // Light Pink
+    primaryContainer: '#880E4F',
+    secondary: '#4DD0E1', // Light Cyan
+    secondaryContainer: '#00695C',
+    tertiary: '#FFB74D', // Light Orange
+    tertiaryContainer: '#E65100',
+    error: '#EF5350',
     background: '#121212',
     surface: '#1E1E1E',
+    surfaceVariant: '#2C2C2C',
     onSurfaceVariant: '#BDBDBD',
+    outline: '#424242',
   },
 };
 

@@ -1,31 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, FlatList, RefreshControl, StyleSheet, ScrollView, LayoutAnimation, UIManager, Platform } from 'react-native';
+import { View, FlatList, RefreshControl, StyleSheet, ScrollView, Animated } from 'react-native';
 import { 
   Text, 
-  TextInput, 
-  Button, 
   Card, 
-  Chip, 
-  RadioButton,
   useTheme,
-  Portal,
-  Modal,
-  Divider,
-  Surface
+  Button,
+  Surface,
+  Avatar
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'expo-router';
-import { Bus, SearchFilters } from '@/types';
+import { Bus } from '@/types';
 import { mockBuses } from '@/data/mockData';
 import BusCard from '@/components/BusCard';
-import AuthModal from '@/components/AuthModal';
-
-// Enable layout animations on Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+import SearchWidget from '@/components/SearchWidget';
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -33,20 +23,15 @@ export default function HomeScreen() {
   const router = useRouter();
   const [buses, setBuses] = useState<Bus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showSearchResults, setShowSearchResults] = useState(false);
-  
-  // Search functionality state
-  const [filters, setFilters] = useState<SearchFilters>({
-    from: '',
-    to: '',
-    date: new Date().toISOString().split('T')[0],
-  });
-  const [searchResults, setSearchResults] = useState<Bus[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const fadeAnim = new Animated.Value(0);
 
   useEffect(() => {
     loadBuses();
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
   }, []);
 
   const loadBuses = async () => {
@@ -62,72 +47,9 @@ export default function HomeScreen() {
     loadBuses();
   }, []);
 
-  const handleSearch = async () => {
-    if (!filters.from || !filters.to) {
-      return;
-    }
-
-    setIsSearching(true);
-    
-    // Animate the layout change
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    
-    // Simulate API search
-    setTimeout(() => {
-      let results = mockBuses;
-      
-      if (filters.from) {
-        results = results.filter(bus => 
-          bus.from.toLowerCase().includes(filters.from.toLowerCase())
-        );
-      }
-      
-      if (filters.to) {
-        results = results.filter(bus => 
-          bus.to.toLowerCase().includes(filters.to.toLowerCase())
-        );
-      }
-      
-      if (filters.busType) {
-        results = results.filter(bus => bus.type === filters.busType);
-      }
-      
-      // Sort results
-      if (filters.sortBy) {
-        results.sort((a, b) => {
-          switch (filters.sortBy) {
-            case 'price':
-              return a.price - b.price;
-            case 'rating':
-              return b.rating - a.rating;
-            case 'departure':
-              return a.departureTime.localeCompare(b.departureTime);
-            default:
-              return 0;
-          }
-        });
-      }
-      
-      setSearchResults(results);
-      setShowSearchResults(true);
-      setIsSearching(false);
-    }, 1000);
-  };
-
-  const clearSearch = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setShowSearchResults(false);
-    setSearchResults([]);
-    setFilters({
-      from: '',
-      to: '',
-      date: new Date().toISOString().split('T')[0],
-    });
-  };
-
   const handleBusPress = (bus: Bus) => {
     if (!isAuthenticated) {
-      setShowAuthModal(true);
+      // Navigate to auth or show auth modal
       return;
     }
     router.push(`/bus-details?busId=${bus.id}`);
@@ -137,7 +59,7 @@ export default function HomeScreen() {
     <BusCard bus={item} onPress={() => handleBusPress(item)} />
   );
 
-  const displayBuses = showSearchResults ? searchResults : buses;
+  const featuredBuses = buses.slice(0, 3);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -148,174 +70,274 @@ export default function HomeScreen() {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text variant="headlineLarge" style={[styles.title, { color: theme.colors.onBackground }]}>
-            SwiftBus
-          </Text>
-          <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-            Your journey starts here
-          </Text>
-        </View>
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <View>
+                <Text variant="headlineLarge" style={[styles.title, { color: theme.colors.onBackground }]}>
+                  SwiftBus
+                </Text>
+                <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+                  Book your journey with confidence
+                </Text>
+              </View>
+              <Avatar.Icon 
+                size={48} 
+                icon="bus" 
+                style={{ backgroundColor: theme.colors.primaryContainer }}
+              />
+            </View>
+          </View>
+        </Animated.View>
 
         {/* Search Widget */}
-        <Surface style={[styles.searchWidget, { backgroundColor: theme.colors.surface }]} elevation={4}>
-          <Text variant="titleMedium" style={[styles.searchTitle, { color: theme.colors.onSurface }]}>
-            Find Your Bus
-          </Text>
-          
-          <View style={styles.inputRow}>
-            <TextInput
-              label="From"
-              value={filters.from}
-              onChangeText={(text) => setFilters(prev => ({ ...prev, from: text }))}
-              style={styles.input}
-              mode="outlined"
-              left={<TextInput.Icon icon="map-marker" />}
-            />
-            <TextInput
-              label="To"
-              value={filters.to}
-              onChangeText={(text) => setFilters(prev => ({ ...prev, to: text }))}
-              style={styles.input}
-              mode="outlined"
-              left={<TextInput.Icon icon="map-marker-outline" />}
-            />
-          </View>
+        <SearchWidget style={styles.searchWidget} />
 
-          <TextInput
-            label="Travel Date"
-            value={filters.date}
-            onChangeText={(text) => setFilters(prev => ({ ...prev, date: text }))}
-            style={styles.dateInput}
-            mode="outlined"
-            right={<TextInput.Icon icon="calendar" />}
-            placeholder="YYYY-MM-DD"
-            left={<TextInput.Icon icon="calendar-clock" />}
-          />
-
-          <Text variant="titleSmall" style={[styles.filterTitle, { color: theme.colors.onSurface }]}>
-            Bus Type
-          </Text>
-          <View style={styles.chipContainer}>
-            <Chip
-              selected={!filters.busType}
-              onPress={() => setFilters(prev => ({ ...prev, busType: undefined }))}
-              style={styles.chip}
-              showSelectedOverlay
-            >
-              All Types
-            </Chip>
-            <Chip
-              selected={filters.busType === 'AC'}
-              onPress={() => setFilters(prev => ({ ...prev, busType: 'AC' }))}
-              style={styles.chip}
-              showSelectedOverlay
-            >
-              AC
-            </Chip>
-            <Chip
-              selected={filters.busType === 'Non-AC'}
-              onPress={() => setFilters(prev => ({ ...prev, busType: 'Non-AC' }))}
-              style={styles.chip}
-              showSelectedOverlay
-            >
-              Non-AC
-            </Chip>
-          </View>
-
-          <Text variant="titleSmall" style={[styles.filterTitle, { color: theme.colors.onSurface }]}>
-            Sort By
-          </Text>
-          <RadioButton.Group
-            onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value as any }))}
-            value={filters.sortBy || ''}
-          >
-            <View style={styles.radioRow}>
-              <RadioButton value="price" />
-              <Text style={[styles.radioLabel, { color: theme.colors.onSurface }]}>Price (Low to High)</Text>
-            </View>
-            <View style={styles.radioRow}>
-              <RadioButton value="rating" />
-              <Text style={[styles.radioLabel, { color: theme.colors.onSurface }]}>Rating (High to Low)</Text>
-            </View>
-            <View style={styles.radioRow}>
-              <RadioButton value="departure" />
-              <Text style={[styles.radioLabel, { color: theme.colors.onSurface }]}>Departure Time</Text>
-            </View>
-          </RadioButton.Group>
-
-          <View style={styles.searchButtonContainer}>
-            <Button
-              mode="contained"
-              onPress={handleSearch}
-              loading={isSearching}
-              style={styles.searchButton}
-              icon="magnify"
-              disabled={!filters.from || !filters.to}
-            >
-              Search Buses
-            </Button>
-            {showSearchResults && (
-              <Button
-                mode="outlined"
-                onPress={clearSearch}
-                style={styles.clearButton}
-                icon="close"
-              >
-                Clear
-              </Button>
-            )}
-          </View>
-        </Surface>
-
-        {/* Results Section */}
-        <View style={styles.resultsSection}>
-          <View style={styles.resultsHeader}>
-            <Text variant="titleLarge" style={[styles.resultsTitle, { color: theme.colors.onBackground }]}>
-              {showSearchResults ? `Search Results (${searchResults.length})` : 'Popular Routes'}
+        {/* Featured Buses Section */}
+        <Animated.View style={[styles.featuredSection, { opacity: fadeAnim }]}>
+          <View style={styles.sectionHeader}>
+            <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
+              Featured Routes
             </Text>
-            {showSearchResults && (
-              <MaterialCommunityIcons 
-                name="check-circle" 
-                size={24} 
-                color={theme.colors.primary} 
-              />
-            )}
+            <Button mode="text" onPress={() => {}}>
+              View All
+            </Button>
           </View>
           
-          {displayBuses.length > 0 ? (
-            <FlatList
-              data={displayBuses}
-              renderItem={renderBusItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              contentContainerStyle={styles.resultsList}
-              showsVerticalScrollIndicator={false}
-            />
-          ) : showSearchResults ? (
-            <Card style={styles.noResultsCard}>
-              <Card.Content style={styles.noResultsContent}>
-                <MaterialCommunityIcons 
-                  name="bus-alert" 
-                  size={48} 
-                  color={theme.colors.onSurfaceVariant} 
-                />
-                <Text variant="titleMedium" style={[styles.noResultsTitle, { color: theme.colors.onSurface }]}>
-                  No buses found
-                </Text>
-                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                  Try adjusting your search criteria
-                </Text>
-              </Card.Content>
-            </Card>
-          ) : null}
-        </View>
+          <FlatList
+            data={featuredBuses}
+            renderItem={renderBusItem}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+            contentContainerStyle={styles.featuredList}
+            showsVerticalScrollIndicator={false}
+          />
+        </Animated.View>
 
-        {/* Quick Actions */}
-        {!showSearchResults && (
-          <View style={styles.quickActions}>
-            <Text variant="titleMedium" style={[styles.quickActionsTitle, { color: theme.colors.onBackground }]}>
-              Quick Actions
+        {/* Services Section */}
+        <Animated.View style={[styles.servicesSection, { opacity: fadeAnim }]}>
+          <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
+            Our Services
+          </Text>
+          <View style={styles.servicesGrid}>
+            <Surface style={[styles.serviceCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
+              <MaterialCommunityIcons name="shield-check" size={32} color={theme.colors.primary} />
+              <Text variant="titleSmall" style={[styles.serviceTitle, { color: theme.colors.onSurface }]}>
+                Safe Travel
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                Verified operators & GPS tracking
+              </Text>
+            </Surface>
+            
+            <Surface style={[styles.serviceCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
+              <MaterialCommunityIcons name="clock-fast" size={32} color={theme.colors.secondary} />
+              <Text variant="titleSmall" style={[styles.serviceTitle, { color: theme.colors.onSurface }]}>
+                On-Time
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                Punctual departures & arrivals
+              </Text>
+            </Surface>
+            
+            <Surface style={[styles.serviceCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
+              <MaterialCommunityIcons name="currency-inr" size={32} color={theme.colors.tertiary} />
+              <Text variant="titleSmall" style={[styles.serviceTitle, { color: theme.colors.onSurface }]}>
+                Best Price
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                Guaranteed lowest fares
+              </Text>
+            </Surface>
+            
+            <Surface style={[styles.serviceCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
+              <MaterialCommunityIcons name="headset" size={32} color={theme.colors.error} />
+              <Text variant="titleSmall" style={[styles.serviceTitle, { color: theme.colors.onSurface }]}>
+                24/7 Support
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                Round-the-clock assistance
+              </Text>
+            </Surface>
+          </View>
+        </Animated.View>
+
+        {/* Stats Section */}
+        <Animated.View style={[styles.statsSection, { opacity: fadeAnim }]}>
+          <Surface style={[styles.statsCard, { backgroundColor: theme.colors.primaryContainer }]} elevation={3}>
+            <View style={styles.statsContent}>
+              <View style={styles.statItem}>
+                <Text variant="headlineMedium" style={[styles.statNumber, { color: theme.colors.primary }]}>
+                  10M+
+                </Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.onPrimaryContainer }}>
+                  Happy Travelers
+                </Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text variant="headlineMedium" style={[styles.statNumber, { color: theme.colors.primary }]}>
+                  50K+
+                </Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.onPrimaryContainer }}>
+                  Routes Covered
+                </Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text variant="headlineMedium" style={[styles.statNumber, { color: theme.colors.primary }]}>
+                  99%
+                </Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.onPrimaryContainer }}>
+                  On-Time Performance
+                </Text>
+              </View>
+            </View>
+          </Surface>
+        </Animated.View>
+
+        {/* Why Choose Us */}
+        <Animated.View style={[styles.whyChooseSection, { opacity: fadeAnim }]}>
+          <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
+            Why Choose SwiftBus?
+          </Text>
+          <View style={styles.featuresList}>
+            <View style={styles.featureItem}>
+              <MaterialCommunityIcons name="check-circle" size={20} color={theme.colors.primary} />
+              <Text variant="bodyMedium" style={[styles.featureText, { color: theme.colors.onSurface }]}>
+                Instant booking confirmation
+              </Text>
+            </View>
+            <View style={styles.featureItem}>
+              <MaterialCommunityIcons name="check-circle" size={20} color={theme.colors.primary} />
+              <Text variant="bodyMedium" style={[styles.featureText, { color: theme.colors.onSurface }]}>
+                Easy cancellation & refunds
+              </Text>
+            </View>
+            <View style={styles.featureItem}>
+              <MaterialCommunityIcons name="check-circle" size={20} color={theme.colors.primary} />
+              <Text variant="bodyMedium" style={[styles.featureText, { color: theme.colors.onSurface }]}>
+                Live bus tracking
+              </Text>
+            </View>
+            <View style={styles.featureItem}>
+              <MaterialCommunityIcons name="check-circle" size={20} color={theme.colors.primary} />
+              <Text variant="bodyMedium" style={[styles.featureText, { color: theme.colors.onSurface }]}>
+                Multiple payment options
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    padding: 24,
+    paddingBottom: 16,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  title: {
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+  },
+  searchWidget: {
+    margin: 20,
+    marginTop: 0,
+  },
+  featuredSection: {
+    margin: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontWeight: '600',
+  },
+  featuredList: {
+    paddingBottom: 10,
+  },
+  servicesSection: {
+    margin: 20,
+    marginTop: 0,
+  },
+  servicesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 16,
+  },
+  serviceCard: {
+    flex: 1,
+    minWidth: '45%',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  serviceTitle: {
+    marginTop: 8,
+    marginBottom: 4,
+    fontWeight: '600',
+  },
+  statsSection: {
+    margin: 20,
+    marginTop: 0,
+  },
+  statsCard: {
+    borderRadius: 16,
+    padding: 24,
+  },
+  statsContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
+  whyChooseSection: {
+    margin: 20,
+    marginTop: 0,
+    marginBottom: 40,
+  },
+  featuresList: {
+    marginTop: 16,
+    gap: 12,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  featureText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+});
+
             </Text>
             <View style={styles.quickActionButtons}>
               <Card style={styles.quickActionCard} onPress={() => {}}>
