@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Image } from 'react-native';
 import { 
   Text, 
   Card, 
@@ -94,6 +94,13 @@ export default function BusDetailsScreen() {
         </View>
 
         <Card style={styles.busCard}>
+          {bus.image && (
+            <Card.Cover 
+              source={{ uri: bus.image }} 
+              style={styles.busImage}
+              resizeMode="cover"
+            />
+          )}
           <Card.Content>
             <View style={styles.busHeader}>
               <View style={styles.busInfo}>
@@ -278,12 +285,17 @@ const styles = StyleSheet.create({
     margin: 20,
     marginTop: 10,
     elevation: 4,
+    overflow: 'hidden',
+  },
+  busImage: {
+    height: 200,
   },
   busHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 20,
+    marginTop: 16,
   },
   busInfo: {
     flex: 1,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { Card, Text, Chip, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Bus } from '@/types';
@@ -14,6 +14,13 @@ export default function BusCard({ bus, onPress }: BusCardProps) {
 
   return (
     <Card style={styles.card} onPress={onPress}>
+      {bus.image && (
+        <Card.Cover 
+          source={{ uri: bus.image }} 
+          style={styles.busImage}
+          resizeMode="cover"
+        />
+      )}
       <Card.Content>
         <View style={styles.header}>
           <View style={styles.busInfo}>
@@ -113,12 +120,17 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 16,
     elevation: 4,
+    overflow: 'hidden',
+  },
+  busImage: {
+    height: 160,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
+    marginTop: 12,
   },
   busInfo: {
     flex: 1,

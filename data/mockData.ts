@@ -15,6 +15,7 @@ export const mockBuses: Bus[] = [
     totalSeats: 40,
     amenities: ['WiFi', 'USB Charging', 'Air Conditioning', 'Reclining Seats'],
     rating: 4.5,
+    image: 'https://images.pexels.com/photos/159291/bus-public-transport-transportation-street-159291.jpeg?auto=compress&cs=tinysrgb&w=800',
   },
   {
     id: '2',
@@ -30,6 +31,7 @@ export const mockBuses: Bus[] = [
     totalSeats: 45,
     amenities: ['WiFi', 'USB Charging', 'Reading Lights'],
     rating: 4.2,
+    image: 'https://images.pexels.com/photos/1007410/pexels-photo-1007410.jpeg?auto=compress&cs=tinysrgb&w=800',
   },
   {
     id: '3',
@@ -45,6 +47,7 @@ export const mockBuses: Bus[] = [
     totalSeats: 32,
     amenities: ['WiFi', 'USB Charging', 'Air Conditioning', 'Sleeper Beds', 'Blankets'],
     rating: 4.8,
+    image: 'https://images.pexels.com/photos/3593922/pexels-photo-3593922.jpeg?auto=compress&cs=tinysrgb&w=800',
   },
   {
     id: '4',
@@ -60,6 +63,7 @@ export const mockBuses: Bus[] = [
     totalSeats: 38,
     amenities: ['WiFi', 'Air Conditioning', 'Snacks'],
     rating: 4.3,
+    image: 'https://images.pexels.com/photos/1007456/pexels-photo-1007456.jpeg?auto=compress&cs=tinysrgb&w=800',
   },
 ];
 
